@@ -1,14 +1,19 @@
-# ghopen
+# ![](icons/world_go.png) ghopen
 
 Opens the current git repo on GitHub in the browser. If the current branch has a pull request, it opens the PR page instead of the repo root.
 
 ## Usage
 
+**From the terminal:**
 ```
 ghopen
 ```
-
 Run from any directory inside a git repo. No arguments needed.
+
+**From File Explorer:**
+Right-click any folder (or right-click inside an open folder), then choose **Mike's Tools > Open on GitHub**.
+(On Windows 11, click "Show more options" first to get the classic menu.)
+`install.ps1` registers this on both folder icons and folder backgrounds.
 
 ## Behaviour
 

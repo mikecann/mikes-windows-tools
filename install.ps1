@@ -145,71 +145,86 @@ $vtSc.Save()
 Write-Host "  [lnk]  $vtShortcutPath" -ForegroundColor Green
 
 # ---------------------------------------------------------------------------
-# Context menu - "Mike's Tools" submenu on video files in File Explorer
-# Registered per-extension under SystemFileAssociations (more reliable than
-# the perceived-type path which Explorer doesn't always pick up).
+# Context menu - "Mike's Tools" submenu in File Explorer
+# Covers: video files (transcribe), image files (removebg), folders (ghopen)
 # ---------------------------------------------------------------------------
-Write-Host "  [reg]  Registering 'Mike''s Tools' context menu for video files..." -ForegroundColor Green
+Write-Host "  [reg]  Registering 'Mike''s Tools' context menus..." -ForegroundColor Green
 
-# Convert a PNG to an .ico file using PNG-in-ICO format (Vista+).
-# Embeds the raw PNG bytes directly into the ICO container, which preserves
-# full alpha transparency. GetHicon() / Icon.FromHandle() drops the alpha
-# channel and fills it with black, so we avoid that path entirely.
+# Convert a PNG to an .ico using PNG-in-ICO format (Vista+).
+# Embeds raw PNG bytes into the ICO container to preserve full alpha
+# transparency. GetHicon()/Icon.FromHandle() fills alpha with black.
 function ConvertTo-Ico($pngPath, $icoPath) {
     $pngBytes = [System.IO.File]::ReadAllBytes($pngPath)
     $stream   = [System.IO.FileStream]::new($icoPath, [System.IO.FileMode]::Create)
     $w        = [System.IO.BinaryWriter]::new($stream)
-    # ICONDIR
-    $w.Write([uint16]0)                     # reserved
-    $w.Write([uint16]1)                     # type: 1 = icon
-    $w.Write([uint16]1)                     # image count
-    # ICONDIRENTRY
-    $w.Write([byte]16)                      # width
-    $w.Write([byte]16)                      # height
-    $w.Write([byte]0)                       # color count (0 = truecolor)
-    $w.Write([byte]0)                       # reserved
-    $w.Write([uint16]1)                     # planes
-    $w.Write([uint16]32)                    # bit depth
-    $w.Write([uint32]$pngBytes.Length)      # image data size
-    $w.Write([uint32]22)                    # image data offset (6 + 16 = 22)
-    # image data - raw PNG bytes
+    $w.Write([uint16]0); $w.Write([uint16]1); $w.Write([uint16]1)   # ICONDIR
+    $w.Write([byte]16);  $w.Write([byte]16);  $w.Write([byte]0)     # ICONDIRENTRY width/height/colorcount
+    $w.Write([byte]0);   $w.Write([uint16]1); $w.Write([uint16]32)  # reserved/planes/bitcount
+    $w.Write([uint32]$pngBytes.Length); $w.Write([uint32]22)        # data size / offset
     $w.Write($pngBytes)
-    $w.Close()
-    $stream.Close()
+    $w.Close(); $stream.Close()
+}
+
+# Helper: ensure a "Mike's Tools" submenu root exists at $rootKey with $icon.
+function Set-MikesToolsRoot($rootKey, $icon) {
+    New-Item -Path $rootKey -Force | Out-Null
+    Set-ItemProperty -Path $rootKey -Name "MUIVerb"     -Value "Mike's Tools"
+    Set-ItemProperty -Path $rootKey -Name "SubCommands" -Value ""
+    Set-ItemProperty -Path $rootKey -Name "Icon"        -Value $icon
+}
+
+# Helper: add a verb entry + command under an existing Mike's Tools root.
+function Add-MikesVerb($rootKey, $verbName, $label, $icon, $command) {
+    $verbKey = "$rootKey\shell\$verbName"
+    $cmdKey  = "$verbKey\command"
+    New-Item -Path $verbKey -Force | Out-Null
+    New-Item -Path $cmdKey  -Force | Out-Null
+    Set-ItemProperty -Path $verbKey -Name "MUIVerb" -Value $label
+    Set-ItemProperty -Path $verbKey -Name "Icon"    -Value $icon
+    Set-ItemProperty -Path $cmdKey  -Name "(Default)" -Value $command
 }
 
 $iconsOut = "$env:LOCALAPPDATA\mikes-windows-tools\icons"
 New-Item -ItemType Directory -Force $iconsOut | Out-Null
 
-$wrenchIco = "$iconsOut\mikes-tools.ico"
-$filmIco   = "$iconsOut\transcribe.ico"
-ConvertTo-Ico "$RepoDir\transcribe\icons\wrench.png" $wrenchIco
-ConvertTo-Ico "$RepoDir\transcribe\icons\film.png"   $filmIco
+$wrenchIco  = "$iconsOut\mikes-tools.ico"
+$filmIco    = "$iconsOut\transcribe.ico"
+$pictureIco = "$iconsOut\removebg.ico"
+$worldIco   = "$iconsOut\ghopen.ico"
+ConvertTo-Ico "$RepoDir\transcribe\icons\wrench.png"  $wrenchIco
+ConvertTo-Ico "$RepoDir\transcribe\icons\film.png"    $filmIco
+ConvertTo-Ico "$RepoDir\removebg\icons\picture.png"   $pictureIco
+ConvertTo-Ico "$RepoDir\ghopen\icons\world_go.png"    $worldIco
 Write-Host "  [ico]  Icons written to $iconsOut" -ForegroundColor Green
 
-$transcribeCmd = 'cmd.exe /k ""C:\dev\tools\transcribe.bat" "%1""'
-
+# --- transcribe: video file extensions ---
 $videoExts = @('.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v', '.mpg', '.mpeg', '.ts', '.mts', '.m2ts', '.flv', '.f4v')
-
 foreach ($ext in $videoExts) {
-    $menuRoot  = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\MikesTools"
-    $transcKey = "$menuRoot\shell\Transcribe"
-    $cmdKey    = "$transcKey\command"
-
-    New-Item -Path $menuRoot  -Force | Out-Null
-    New-Item -Path $transcKey -Force | Out-Null
-    New-Item -Path $cmdKey    -Force | Out-Null
-
-    Set-ItemProperty -Path $menuRoot  -Name "MUIVerb"     -Value "Mike's Tools"
-    Set-ItemProperty -Path $menuRoot  -Name "SubCommands" -Value ""
-    Set-ItemProperty -Path $menuRoot  -Name "Icon"        -Value $wrenchIco
-    Set-ItemProperty -Path $transcKey -Name "MUIVerb"     -Value "Transcribe Video"
-    Set-ItemProperty -Path $transcKey -Name "Icon"        -Value $filmIco
-    Set-ItemProperty -Path $cmdKey    -Name "(Default)"   -Value $transcribeCmd
+    $root = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\MikesTools"
+    Set-MikesToolsRoot $root $wrenchIco
+    Add-MikesVerb $root "Transcribe" "Transcribe Video" $filmIco 'cmd.exe /k ""C:\dev\tools\transcribe.bat" "%1""'
 }
 
-# Notify the shell that file associations changed so Explorer picks it up
-# without needing a manual restart.
+# --- removebg: image file extensions ---
+$imageExts = @('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.tif')
+foreach ($ext in $imageExts) {
+    $root = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\MikesTools"
+    Set-MikesToolsRoot $root $wrenchIco
+    Add-MikesVerb $root "RemoveBg" "Remove Background" $pictureIco 'cmd.exe /k ""C:\dev\tools\removebg.bat" "%1""'
+}
+
+# --- ghopen: folders (right-click on folder icon) and folder background ---
+# Directory - right-clicking a folder item; %1 = folder path
+$dirRoot = "HKCU:\Software\Classes\Directory\shell\MikesTools"
+Set-MikesToolsRoot $dirRoot $wrenchIco
+Add-MikesVerb $dirRoot "GhOpen" "Open on GitHub" $worldIco 'cmd.exe /k "cd /d "%1" && "C:\dev\tools\ghopen.bat""'
+
+# Directory\Background - right-clicking inside an open folder; %V = current folder
+$bgRoot = "HKCU:\Software\Classes\Directory\Background\shell\MikesTools"
+Set-MikesToolsRoot $bgRoot $wrenchIco
+Add-MikesVerb $bgRoot "GhOpen" "Open on GitHub" $worldIco 'cmd.exe /k "cd /d "%V" && "C:\dev\tools\ghopen.bat""'
+
+# Notify the shell so Explorer picks up all changes without a manual restart.
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -220,7 +235,7 @@ public class ShellNotify {
 '@
 [ShellNotify]::SHChangeNotify(0x08000000, 0x0000, [IntPtr]::Zero, [IntPtr]::Zero)
 
-Write-Host "  [reg]  Done. Right-click a video in Explorer to see Mike's Tools." -ForegroundColor Green
+Write-Host "  [reg]  Done. Mike's Tools in context menus for videos, images, and folders." -ForegroundColor Green
 
 # ---------------------------------------------------------------------------
 # Dependencies — run each tool's deps.ps1 if present

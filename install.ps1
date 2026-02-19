@@ -110,6 +110,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\backup-phone\backu
 "@
 
 # ---------------------------------------------------------------------------
+# vid2md — YouTube URL to markdown clipboard
+# ---------------------------------------------------------------------------
+Write-BatStub "vid2md" @"
+@echo off
+powershell -NoProfile -ExecutionPolicy Bypass -Sta -File "$RepoDir\vid2md\vid2md.ps1" %*
+"@
+
+# ---------------------------------------------------------------------------
 # scale-monitor4 — taskbar shortcut (no bat stub needed; launched via shortcut)
 # ---------------------------------------------------------------------------
 $vbsPath      = "$RepoDir\scale-monitor4\scale-monitor4.vbs"
@@ -199,18 +207,21 @@ $wrenchIco  = "$iconsOut\mikes-tools.ico"
 $filmIco    = "$iconsOut\transcribe.ico"
 $pictureIco = "$iconsOut\removebg.ico"
 $worldIco   = "$iconsOut\ghopen.ico"
-ConvertTo-Ico "$RepoDir\transcribe\icons\wrench.png"  $wrenchIco
-ConvertTo-Ico "$RepoDir\transcribe\icons\film.png"    $filmIco
-ConvertTo-Ico "$RepoDir\removebg\icons\picture.png"   $pictureIco
-ConvertTo-Ico "$RepoDir\ghopen\icons\world_go.png"    $worldIco
+$linkPageIco = "$iconsOut\vid2md.ico"
+ConvertTo-Ico "$RepoDir\transcribe\icons\wrench.png"       $wrenchIco
+ConvertTo-Ico "$RepoDir\transcribe\icons\film.png"         $filmIco
+ConvertTo-Ico "$RepoDir\removebg\icons\picture.png"        $pictureIco
+ConvertTo-Ico "$RepoDir\ghopen\icons\world_go.png"         $worldIco
+ConvertTo-Ico "$RepoDir\vid2md\icons\page_white_link.png"  $linkPageIco
 Write-Host "  [ico]  Icons written to $iconsOut" -ForegroundColor Green
 
-# --- transcribe: video file extensions ---
+# --- transcribe + vid2md: video file extensions ---
 $videoExts = @('.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v', '.mpg', '.mpeg', '.ts', '.mts', '.m2ts', '.flv', '.f4v')
 foreach ($ext in $videoExts) {
     $root = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\MikesTools"
     Set-MikesToolsRoot $root $wrenchIco
-    Add-MikesVerb $root "Transcribe" "Transcribe Video" $filmIco 'cmd.exe /k ""C:\dev\tools\transcribe.bat" "%1""'
+    Add-MikesVerb $root "Transcribe" "Transcribe Video"   $filmIco    'cmd.exe /k ""C:\dev\tools\transcribe.bat" "%1""'
+    Add-MikesVerb $root "Vid2md"    "Video to Markdown"  $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`" `"%1`""
 }
 
 # --- removebg: image file extensions ---
@@ -221,16 +232,34 @@ foreach ($ext in $imageExts) {
     Add-MikesVerb $root "RemoveBg" "Remove Background" $pictureIco 'cmd.exe /k ""C:\dev\tools\removebg.bat" "%1""'
 }
 
-# --- ghopen: folders (right-click on folder icon) and folder background ---
+# --- vid2md: Internet Shortcut files (.url) - YouTube links ---
+$urlRoot = "HKCU:\Software\Classes\SystemFileAssociations\.url\shell\MikesTools"
+Set-MikesToolsRoot $urlRoot $wrenchIco
+Add-MikesVerb $urlRoot "Vid2md" "Video to Markdown" $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`" `"%1`""
+
+# --- ghopen + vid2md: folders (right-click on folder icon) and folder background ---
+$vid2mdCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`" `"%1`""
+
 # Directory - right-clicking a folder item; %1 = folder path
 $dirRoot = "HKCU:\Software\Classes\Directory\shell\MikesTools"
 Set-MikesToolsRoot $dirRoot $wrenchIco
-Add-MikesVerb $dirRoot "GhOpen" "Open on GitHub" $worldIco 'cmd.exe /k "cd /d "%1" && "C:\dev\tools\ghopen.bat""'
+Add-MikesVerb $dirRoot "GhOpen" "Open on GitHub"   $worldIco  'cmd.exe /k "cd /d "%1" && "C:\dev\tools\ghopen.bat""'
+Add-MikesVerb $dirRoot "Vid2md" "Video to Markdown" $linkPageIco $vid2mdCmd
 
 # Directory\Background - right-clicking inside an open folder; %V = current folder
 $bgRoot = "HKCU:\Software\Classes\Directory\Background\shell\MikesTools"
 Set-MikesToolsRoot $bgRoot $wrenchIco
-Add-MikesVerb $bgRoot "GhOpen" "Open on GitHub" $worldIco 'cmd.exe /k "cd /d "%V" && "C:\dev\tools\ghopen.bat""'
+Add-MikesVerb $bgRoot "GhOpen" "Open on GitHub"   $worldIco  'cmd.exe /k "cd /d "%V" && "C:\dev\tools\ghopen.bat""'
+Add-MikesVerb $bgRoot "Vid2md" "Video to Markdown" $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`""
+
+# --- vid2md: all files and folders via AllFilesystemObjects ---
+# AllFilesystemObjects is a Windows shell class that matches every file and folder.
+# It has no literal '*' in the registry path so PowerShell's -Path handles it safely.
+# Windows merges these verbs with any more-specific SystemFileAssociations entries
+# (e.g. video files also get Transcribe from their own registration).
+$afoRoot = "HKCU:\Software\Classes\AllFilesystemObjects\shell\MikesTools"
+Set-MikesToolsRoot $afoRoot $wrenchIco
+Add-MikesVerb $afoRoot "Vid2md" "Video to Markdown" $linkPageIco $vid2mdCmd
 
 # Notify the shell so Explorer picks up all changes without a manual restart.
 Add-Type -TypeDefinition @'

@@ -27,6 +27,7 @@ If you want to use any of this, the recommended approach is:
 | Name | Type | Description |
 |---|---|---|
 | <img src="transcribe/icons/film.png"> [transcribe](transcribe/README.md) | CLI + context menu | Extract audio from a video and transcribe it via faster-whisper (CUDA with CPU fallback); right-click any video file in Explorer |
+| <img src="vid2md/icons/page_white_link.png"> [vid2md](vid2md/README.md) | CLI + context menu | Convert a YouTube URL to a markdown image-link and copy it to clipboard; right-click any `.url` Internet Shortcut in Explorer |
 | <img src="removebg/icons/picture.png"> [removebg](removebg/README.md) | CLI + context menu | Remove the background from an image using rembg / birefnet-portrait; right-click any image file in Explorer |
 | <img src="ghopen/icons/world_go.png"> [ghopen](ghopen/README.md) | CLI + context menu | Open the current repo on GitHub; opens the PR page if on a PR branch; right-click any folder in Explorer |
 | [ctxmenu](ctxmenu/README.md) | GUI | Manage Explorer context menu entries - toggle shell verbs and COM handlers on/off without admin rights |

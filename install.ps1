@@ -151,6 +151,36 @@ Write-Host "  [lnk]  $vtShortcutPath" -ForegroundColor Green
 # ---------------------------------------------------------------------------
 Write-Host "  [reg]  Registering 'Mike''s Tools' context menu for video files..." -ForegroundColor Green
 
+# Convert a PNG to a 16x16 .ico file and return the output path.
+# The registry Icon value requires .ico (or .dll,index) - raw PNG is not supported.
+function ConvertTo-Ico($pngPath, $icoPath) {
+    Add-Type -AssemblyName System.Drawing
+    $bmp = [System.Drawing.Bitmap]::new($pngPath)
+    # Resize to 16x16 - the standard shell menu icon size
+    $small = [System.Drawing.Bitmap]::new(16, 16, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $g = [System.Drawing.Graphics]::FromImage($small)
+    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.DrawImage($bmp, 0, 0, 16, 16)
+    $g.Dispose()
+    $hicon = $small.GetHicon()
+    $icon  = [System.Drawing.Icon]::FromHandle($hicon)
+    $stream = [System.IO.FileStream]::new($icoPath, [System.IO.FileMode]::Create)
+    $icon.Save($stream)
+    $stream.Close()
+    $icon.Dispose()
+    $small.Dispose()
+    $bmp.Dispose()
+}
+
+$iconsOut = "$env:LOCALAPPDATA\mikes-windows-tools\icons"
+New-Item -ItemType Directory -Force $iconsOut | Out-Null
+
+$wrenchIco = "$iconsOut\mikes-tools.ico"
+$filmIco   = "$iconsOut\transcribe.ico"
+ConvertTo-Ico "$RepoDir\transcribe\icons\wrench.png" $wrenchIco
+ConvertTo-Ico "$RepoDir\transcribe\icons\film.png"   $filmIco
+Write-Host "  [ico]  Icons written to $iconsOut" -ForegroundColor Green
+
 $transcribeCmd = 'cmd.exe /k ""C:\dev\tools\transcribe.bat" "%1""'
 
 $videoExts = @('.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v', '.mpg', '.mpeg', '.ts', '.mts', '.m2ts', '.flv', '.f4v')
@@ -166,7 +196,9 @@ foreach ($ext in $videoExts) {
 
     Set-ItemProperty -Path $menuRoot  -Name "MUIVerb"     -Value "Mike's Tools"
     Set-ItemProperty -Path $menuRoot  -Name "SubCommands" -Value ""
+    Set-ItemProperty -Path $menuRoot  -Name "Icon"        -Value $wrenchIco
     Set-ItemProperty -Path $transcKey -Name "MUIVerb"     -Value "Transcribe Video"
+    Set-ItemProperty -Path $transcKey -Name "Icon"        -Value $filmIco
     Set-ItemProperty -Path $cmdKey    -Name "(Default)"   -Value $transcribeCmd
 }
 

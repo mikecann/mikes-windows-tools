@@ -135,6 +135,19 @@ Then in `my-tool.bat` use `%EXEDIR%` instead of `%~dp0` to find co-located binar
 | `all-hands` | CLI | Launches OpenHands AI coding agent via Docker |
 | Scale Monitor 4 | Taskbar | Toggles Monitor 4 (HG584T05) between 200% (normal) and 300% (filming) |
 | Task Monitor | Taskbar | Real-time NET/CPU/GPU/MEM sparklines overlaid on the taskbar |
+| Voice Type | Taskbar | Push-to-talk local voice transcription — hold Right Ctrl, speak, release to paste |
+
+---
+
+## voice-type — push-to-talk voice transcription
+
+Hold **Right Ctrl** to record, release to transcribe and paste into the active
+window. Runs entirely locally via
+[faster-whisper](https://github.com/SYSTRAN/faster-whisper) (`small.en` on CPU,
+`large-v3-turbo` on CUDA). A live preview builds up in the overlay as you speak.
+A tray icon shows current state and has an exit/enable/startup menu.
+
+See [`voice-type/README.md`](voice-type/README.md) for full docs.
 
 ---
 

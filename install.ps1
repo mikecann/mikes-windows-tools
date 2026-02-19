@@ -123,6 +123,20 @@ $tmSc.Save()
 Write-Host "  [lnk]  $tmShortcutPath" -ForegroundColor Green
 
 # ---------------------------------------------------------------------------
+# voice-type — taskbar shortcut (launched via VBS for no console window)
+# ---------------------------------------------------------------------------
+$vtVbsPath      = "$RepoDir\voice-type\voice-type.vbs"
+$vtShortcutPath = Join-Path $ToolsDir "Voice Type.lnk"
+$vtSc           = $wsh.CreateShortcut($vtShortcutPath)
+$vtSc.TargetPath       = "wscript.exe"
+$vtSc.Arguments        = "`"$vtVbsPath`""
+$vtSc.WorkingDirectory = "$RepoDir\voice-type"
+$vtSc.Description      = "Push-to-talk voice typing: hold Right Ctrl to record, release to transcribe and paste"
+$vtSc.IconLocation     = "%SystemRoot%\System32\imageres.dll,109"
+$vtSc.Save()
+Write-Host "  [lnk]  $vtShortcutPath" -ForegroundColor Green
+
+# ---------------------------------------------------------------------------
 # Dependencies — run each tool's deps.ps1 if present
 # ---------------------------------------------------------------------------
 if ($SkipDeps) {
@@ -151,3 +165,4 @@ Write-Host "To skip dependency checks: install.ps1 -SkipDeps" -ForegroundColor Y
 Write-Host ""
 Write-Host "Reminder: right-click 'Scale Monitor 4.lnk' in $ToolsDir and pin to taskbar." -ForegroundColor Cyan
 Write-Host "Reminder: right-click 'Task Monitor.lnk' in $ToolsDir and pin to taskbar." -ForegroundColor Cyan
+Write-Host "Reminder: right-click 'Voice Type.lnk' in $ToolsDir and pin to taskbar (or run on login)." -ForegroundColor Cyan

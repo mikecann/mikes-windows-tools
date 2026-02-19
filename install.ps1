@@ -151,25 +151,31 @@ Write-Host "  [lnk]  $vtShortcutPath" -ForegroundColor Green
 # ---------------------------------------------------------------------------
 Write-Host "  [reg]  Registering 'Mike''s Tools' context menu for video files..." -ForegroundColor Green
 
-# Convert a PNG to a 16x16 .ico file and return the output path.
-# The registry Icon value requires .ico (or .dll,index) - raw PNG is not supported.
+# Convert a PNG to an .ico file using PNG-in-ICO format (Vista+).
+# Embeds the raw PNG bytes directly into the ICO container, which preserves
+# full alpha transparency. GetHicon() / Icon.FromHandle() drops the alpha
+# channel and fills it with black, so we avoid that path entirely.
 function ConvertTo-Ico($pngPath, $icoPath) {
-    Add-Type -AssemblyName System.Drawing
-    $bmp = [System.Drawing.Bitmap]::new($pngPath)
-    # Resize to 16x16 - the standard shell menu icon size
-    $small = [System.Drawing.Bitmap]::new(16, 16, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($small)
-    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.DrawImage($bmp, 0, 0, 16, 16)
-    $g.Dispose()
-    $hicon = $small.GetHicon()
-    $icon  = [System.Drawing.Icon]::FromHandle($hicon)
-    $stream = [System.IO.FileStream]::new($icoPath, [System.IO.FileMode]::Create)
-    $icon.Save($stream)
+    $pngBytes = [System.IO.File]::ReadAllBytes($pngPath)
+    $stream   = [System.IO.FileStream]::new($icoPath, [System.IO.FileMode]::Create)
+    $w        = [System.IO.BinaryWriter]::new($stream)
+    # ICONDIR
+    $w.Write([uint16]0)                     # reserved
+    $w.Write([uint16]1)                     # type: 1 = icon
+    $w.Write([uint16]1)                     # image count
+    # ICONDIRENTRY
+    $w.Write([byte]16)                      # width
+    $w.Write([byte]16)                      # height
+    $w.Write([byte]0)                       # color count (0 = truecolor)
+    $w.Write([byte]0)                       # reserved
+    $w.Write([uint16]1)                     # planes
+    $w.Write([uint16]32)                    # bit depth
+    $w.Write([uint32]$pngBytes.Length)      # image data size
+    $w.Write([uint32]22)                    # image data offset (6 + 16 = 22)
+    # image data - raw PNG bytes
+    $w.Write($pngBytes)
+    $w.Close()
     $stream.Close()
-    $icon.Dispose()
-    $small.Dispose()
-    $bmp.Dispose()
 }
 
 $iconsOut = "$env:LOCALAPPDATA\mikes-windows-tools\icons"

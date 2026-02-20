@@ -402,24 +402,28 @@ public class OverlayForm : Form {
         // making them visually transparent while still receiving mouse events.
         int x = 0;
 
-        if (S.ShowNetUp)
-            DrawSection(g, ref x, h, "UPLOAD \u2191",
-                SpeedStr(_m.NetUpBps), _cUp, _m.HNetUp, _m.NetPeak);
-        if (S.ShowNetDown)
-            DrawSection(g, ref x, h, "DOWNLOAD \u2193",
-                SpeedStr(_m.NetDnBps), _cDn, _m.HNetDn, _m.NetPeak);
+        if (S.ShowNetUp) {
+            string upVal = SpeedStr(_m.NetUpBps);
+            DrawSection(g, ref x, h, "UP \u2191", upVal, _cUp, _m.HNetUp, _m.NetPeak, upVal);
+        }
+        if (S.ShowNetDown) {
+            string dnVal = SpeedStr(_m.NetDnBps);
+            DrawSection(g, ref x, h, "DL \u2193", dnVal, _cDn, _m.HNetDn, _m.NetPeak, dnVal);
+        }
         if (S.ShowCpu) {
             if (S.CpuMode == "PerCore")
                 DrawCoreGrid(g, ref x, h);
-            else
-                DrawSection(g, ref x, h, "CPU",
-                    string.Format("{0:F0}%", _m.CpuTotal), _cCpu, _m.HCpu, 100f);
+            else {
+                string cpuVal = string.Format("{0:F0}%", _m.CpuTotal);
+                DrawSection(g, ref x, h, "CPU", cpuVal, _cCpu, _m.HCpu, 100f, cpuVal);
+            }
         }
         if (S.ShowGpuUtil || S.ShowGpuTemp)
             DrawGpuSection(g, ref x, h);
-        if (S.ShowMemory)
-            DrawSection(g, ref x, h, "MEM",
-                string.Format("{0:F0}%", _m.MemPct), _cMem, _m.HMem, 100f);
+        if (S.ShowMemory) {
+            string memVal = string.Format("{0:F0}%", _m.MemPct);
+            DrawSection(g, ref x, h, "MEM", memVal, _cMem, _m.HMem, 100f, memVal);
+        }
     }
 
     // GPU section: sparkline driven by utilisation; value line shows util% in one
@@ -427,54 +431,62 @@ public class OverlayForm : Form {
     void DrawGpuSection(Graphics g, ref int x, int h) {
         if (x > 0) g.DrawLine(_divPen, x, 2, x, h - 2);
         DrawSparkline(g, _m.HGpu, new Rectangle(x, 0, SW, h), _cGpu, 100f);
+        var sfLblN = new StringFormat { Alignment = StringAlignment.Near,
+                                        LineAlignment = StringAlignment.Near };
+        var sfLblF = new StringFormat { Alignment = StringAlignment.Far,
+                                        LineAlignment = StringAlignment.Near };
         ShadowStr(g, "GPU", _fLbl, _dimBrush,
-            new RectangleF(x + 3, 1, SW - 6, h * 0.45f), null);
+            new RectangleF(x + 3, 1, SW - 6, h * 0.45f), sfLblN);
+        // Show util% (or temp if util is hidden) right-aligned in the label row.
+        string gpuHdr = S.ShowGpuUtil
+            ? string.Format("{0:F0}%", _m.GpuUtil)
+            : string.Format("{0}\u00B0C", _m.GpuTempC);
+        using (var b = new SolidBrush(S.ShowGpuUtil ? _cGpu : _cGpuTemp))
+            ShadowStr(g, gpuHdr, _fLbl, b,
+                new RectangleF(x + 3, 1, SW - 6, h * 0.45f), sfLblF);
 
-        var rf = new RectangleF(x + 2, h * 0.42f, SW - 4, h * 0.58f);
+        // When both util and temp are shown, keep temp in the body since the label
+        // row only has room for one value (util%).
         if (S.ShowGpuUtil && S.ShowGpuTemp) {
-            string util = string.Format("{0:F0}%", _m.GpuUtil);
-            string temp = string.Format("{0}\u00B0C", _m.GpuTempC);
-            var sfL = new StringFormat { Alignment = StringAlignment.Near,
-                                         LineAlignment = StringAlignment.Center };
-            var sfR = new StringFormat { Alignment = StringAlignment.Far,
-                                         LineAlignment = StringAlignment.Center };
-            using (var bu = new SolidBrush(_cGpu))
-            using (var bt = new SolidBrush(_cGpuTemp)) {
-                ShadowStr(g, util, _fVal, bu, rf, sfL);
-                ShadowStr(g, temp, _fVal, bt, rf, sfR);
-            }
-        } else if (S.ShowGpuUtil) {
-            var sfc = new StringFormat { Alignment = StringAlignment.Center,
-                                         LineAlignment = StringAlignment.Center };
-            using (var b = new SolidBrush(_cGpu))
-                ShadowStr(g, string.Format("{0:F0}%", _m.GpuUtil), _fVal, b, rf, sfc);
-        } else {
             var sfc = new StringFormat { Alignment = StringAlignment.Center,
                                          LineAlignment = StringAlignment.Center };
             using (var b = new SolidBrush(_cGpuTemp))
-                ShadowStr(g, string.Format("{0}\u00B0C", _m.GpuTempC), _fVal, b, rf, sfc);
+                ShadowStr(g, string.Format("{0}\u00B0C", _m.GpuTempC), _fVal, b,
+                    new RectangleF(x + 2, h * 0.42f, SW - 4, h * 0.58f), sfc);
         }
         x += SW;
     }
 
     // Draw one metric section: sparkline fills the background, text is overlaid.
+    // headerVal: if non-null, drawn right-aligned in the label row (e.g. "43%" for MEM).
     void DrawSection(Graphics g, ref int x, int h,
                      string lbl, string val, Color col,
-                     CircularBuffer hist, float scale) {
+                     CircularBuffer hist, float scale, string headerVal = null) {
         if (x > 0) g.DrawLine(_divPen, x, 2, x, h - 2);
         DrawSparkline(g, hist, new Rectangle(x, 0, SW, h), col, scale);
-        // Label: small dim text at the top, with shadow for legibility over any graph height.
+        // Label: small dim text at the top-left.
         ShadowStr(g, lbl, _fLbl, _dimBrush,
             new RectangleF(x + 3, 1, SW - 6, h * 0.45f), null);
+        // Optional right-aligned value in the label row.
+        if (headerVal != null) {
+            var sfR = new StringFormat { Alignment = StringAlignment.Far,
+                                         LineAlignment = StringAlignment.Near };
+            using (var b = new SolidBrush(col))
+                ShadowStr(g, headerVal, _fLbl, b,
+                    new RectangleF(x + 3, 1, SW - 6, h * 0.45f), sfR);
+        }
         // Value: bold coloured text centred in the lower half.
-        var sf = new StringFormat {
-            Alignment     = StringAlignment.Center,
-            LineAlignment = StringAlignment.Center,
-            Trimming      = StringTrimming.Character
-        };
-        using (var b = new SolidBrush(col))
-            ShadowStr(g, val, _fVal, b,
-                new RectangleF(x + 2, h * 0.42f, SW - 4, h * 0.58f), sf);
+        // Skipped when the value is already shown in the label row.
+        if (headerVal == null) {
+            var sf = new StringFormat {
+                Alignment     = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center,
+                Trimming      = StringTrimming.Character
+            };
+            using (var b = new SolidBrush(col))
+                ShadowStr(g, val, _fVal, b,
+                    new RectangleF(x + 2, h * 0.42f, SW - 4, h * 0.58f), sf);
+        }
         x += SW;
     }
 
@@ -525,10 +537,16 @@ public class OverlayForm : Form {
         if (x > 0) g.DrawLine(_divPen, x, 2, x, h - 2);
         int gx = x + 4;
 
-        // "CPU" label above the grid
+        // "CPU" label left-aligned, total % right-aligned -- matches other sections
+        var sfLbl = new StringFormat { Alignment = StringAlignment.Near,
+                                       LineAlignment = StringAlignment.Near };
+        var sfPct = new StringFormat { Alignment = StringAlignment.Far,
+                                       LineAlignment = StringAlignment.Near };
         ShadowStr(g, "CPU", _fLbl, _dimBrush,
-            new RectangleF(gx, 0, gridW, 9),
-            new StringFormat { Alignment = StringAlignment.Center });
+            new RectangleF(gx, 1, gridW, 9), sfLbl);
+        using (var b = new SolidBrush(_cCpu))
+            ShadowStr(g, string.Format("{0:F0}%", _m.CpuTotal), _fLbl, b,
+                new RectangleF(gx, 1, gridW, 9), sfPct);
 
         int rowsH = h - 10;                          // vertical space for bars
         int rowH  = (rowsH - (ROWS - 1) * 2) / ROWS; // bar height with 2px row gaps

@@ -12,13 +12,13 @@ no cloud, no subscription.
 
 ```powershell
 # First time: install dependencies
-powershell -ExecutionPolicy Bypass -File .\voice-type\deps.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\voice-type\deps.ps1
 
 # Add to taskbar (run install.ps1 from repo root if not already done)
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 # Or launch manually for testing
-wscript.exe "C:\dev\me\mike-rosoft\voice-type\voice-type.vbs"
+wscript.exe "C:\dev\me\mikerosoft.app\tools\voice-type\voice-type.vbs"
 ```
 
 Right-click `C:\dev\tools\Voice Type.lnk` → **Pin to taskbar** for one-click launch.

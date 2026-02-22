@@ -48,7 +48,7 @@ if (-not $onPath) {
 }
 
 Write-Host ""
-Write-Host "Installing mike-rosoft -> $ToolsDir" -ForegroundColor Cyan
+Write-Host "Installing mikerosoft.app -> $ToolsDir" -ForegroundColor Cyan
 Write-Host ""
 
 # ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ function Write-BatStub($toolName, $content) {
 Write-BatStub "transcribe" @"
 @echo off
 set "EXEDIR=%~dp0"
-call "$RepoDir\transcribe\transcribe.bat" %*
+call "$RepoDir\tools\transcribe\transcribe.bat" %*
 "@
 
 # ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ call "$RepoDir\transcribe\transcribe.bat" %*
 # ---------------------------------------------------------------------------
 Write-BatStub "removebg" @"
 @echo off
-call "$RepoDir\removebg\removebg.bat" %*
+call "$RepoDir\tools\removebg\removebg.bat" %*
 "@
 
 # ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ call "$RepoDir\removebg\removebg.bat" %*
 # ---------------------------------------------------------------------------
 Write-BatStub "all-hands" @"
 @echo off
-call "$RepoDir\all-hands\all-hands.bat" %*
+call "$RepoDir\tools\all-hands\all-hands.bat" %*
 "@
 
 # ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ call "$RepoDir\all-hands\all-hands.bat" %*
 # ---------------------------------------------------------------------------
 Write-BatStub "ghopen" @"
 @echo off
-call "$RepoDir\ghopen\ghopen.bat" %*
+call "$RepoDir\tools\ghopen\ghopen.bat" %*
 "@
 
 # ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ call "$RepoDir\ghopen\ghopen.bat" %*
 # ---------------------------------------------------------------------------
 Write-BatStub "ctxmenu" @"
 @echo off
-wscript.exe "$RepoDir\ctxmenu\ctxmenu.vbs"
+wscript.exe "$RepoDir\tools\ctxmenu\ctxmenu.vbs"
 "@
 
 # ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ wscript.exe "$RepoDir\ctxmenu\ctxmenu.vbs"
 # ---------------------------------------------------------------------------
 Write-BatStub "backup-phone" @"
 @echo off
-powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\backup-phone\backup-phone.ps1" %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\tools\backup-phone\backup-phone.ps1" %*
 "@
 
 # ---------------------------------------------------------------------------
@@ -114,7 +114,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\backup-phone\backu
 # ---------------------------------------------------------------------------
 Write-BatStub "copypath" @"
 @echo off
-powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\copypath\copypath.ps1" %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\tools\copypath\copypath.ps1" %*
 "@
 
 # ---------------------------------------------------------------------------
@@ -122,19 +122,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$RepoDir\copypath\copypath.
 # ---------------------------------------------------------------------------
 Write-BatStub "vid2md" @"
 @echo off
-powershell -NoProfile -ExecutionPolicy Bypass -Sta -File "$RepoDir\vid2md\vid2md.ps1" %*
+powershell -NoProfile -ExecutionPolicy Bypass -Sta -File "$RepoDir\tools\vid2md\vid2md.ps1" %*
 "@
 
 # ---------------------------------------------------------------------------
 # scale-monitor4 — taskbar shortcut (no bat stub needed; launched via shortcut)
 # ---------------------------------------------------------------------------
-$vbsPath      = "$RepoDir\scale-monitor4\scale-monitor4.vbs"
+$vbsPath      = "$RepoDir\tools\scale-monitor4\scale-monitor4.vbs"
 $shortcutPath = Join-Path $ToolsDir "Scale Monitor 4.lnk"
 $wsh          = New-Object -ComObject WScript.Shell
 $sc           = $wsh.CreateShortcut($shortcutPath)
 $sc.TargetPath       = "wscript.exe"
 $sc.Arguments        = "`"$vbsPath`""
-$sc.WorkingDirectory = "$RepoDir\scale-monitor4"
+$sc.WorkingDirectory = "$RepoDir\tools\scale-monitor4"
 $sc.Description      = "Toggle Monitor 4 scale between 200% (normal) and 300% (filming)"
 $sc.IconLocation     = "%SystemRoot%\System32\imageres.dll,109"
 $sc.Save()
@@ -145,16 +145,16 @@ Write-Host "  [lnk]  $shortcutPath" -ForegroundColor Green
 # ---------------------------------------------------------------------------
 Write-BatStub "taskmon" @"
 @echo off
-wscript.exe "$RepoDir\taskmon\taskmon.vbs"
+wscript.exe "$RepoDir\tools\taskmon\taskmon.vbs"
 "@
 
 # taskmon shortcut
-$tmVbsPath      = "$RepoDir\taskmon\taskmon.vbs"
+$tmVbsPath      = "$RepoDir\tools\taskmon\taskmon.vbs"
 $tmShortcutPath = Join-Path $ToolsDir "Task Monitor.lnk"
 $tmSc           = $wsh.CreateShortcut($tmShortcutPath)
 $tmSc.TargetPath       = "wscript.exe"
 $tmSc.Arguments        = "`"$tmVbsPath`""
-$tmSc.WorkingDirectory = "$RepoDir\taskmon"
+$tmSc.WorkingDirectory = "$RepoDir\tools\taskmon"
 $tmSc.Description      = "Taskbar system monitor: NET / CPU / GPU / MEM sparklines"
 $tmSc.IconLocation     = "%SystemRoot%\System32\imageres.dll,174"
 $tmSc.Save()
@@ -163,12 +163,12 @@ Write-Host "  [lnk]  $tmShortcutPath" -ForegroundColor Green
 # ---------------------------------------------------------------------------
 # voice-type — taskbar shortcut (launched via VBS for no console window)
 # ---------------------------------------------------------------------------
-$vtVbsPath      = "$RepoDir\voice-type\voice-type.vbs"
+$vtVbsPath      = "$RepoDir\tools\voice-type\voice-type.vbs"
 $vtShortcutPath = Join-Path $ToolsDir "Voice Type.lnk"
 $vtSc           = $wsh.CreateShortcut($vtShortcutPath)
 $vtSc.TargetPath       = "wscript.exe"
 $vtSc.Arguments        = "`"$vtVbsPath`""
-$vtSc.WorkingDirectory = "$RepoDir\voice-type"
+$vtSc.WorkingDirectory = "$RepoDir\tools\voice-type"
 $vtSc.Description      = "Push-to-talk voice typing: hold Right Ctrl to record, release to transcribe and paste"
 $vtSc.IconLocation     = "%SystemRoot%\System32\imageres.dll,109"
 $vtSc.Save()
@@ -214,7 +214,7 @@ function Add-MikesVerb($rootKey, $verbName, $label, $icon, $command) {
     Set-ItemProperty -Path $cmdKey  -Name "(Default)" -Value $command
 }
 
-$iconsOut = "$env:LOCALAPPDATA\mike-rosoft\icons"
+$iconsOut = "$env:LOCALAPPDATA\mikerosoft.app\icons"
 New-Item -ItemType Directory -Force $iconsOut | Out-Null
 
 $wrenchIco  = "$iconsOut\mikes-tools.ico"
@@ -222,11 +222,11 @@ $filmIco    = "$iconsOut\transcribe.ico"
 $pictureIco = "$iconsOut\removebg.ico"
 $worldIco   = "$iconsOut\ghopen.ico"
 $linkPageIco = "$iconsOut\vid2md.ico"
-ConvertTo-Ico "$RepoDir\transcribe\icons\wrench.png"       $wrenchIco
-ConvertTo-Ico "$RepoDir\transcribe\icons\film.png"         $filmIco
-ConvertTo-Ico "$RepoDir\removebg\icons\picture.png"        $pictureIco
-ConvertTo-Ico "$RepoDir\ghopen\icons\world_go.png"         $worldIco
-ConvertTo-Ico "$RepoDir\vid2md\icons\page_white_link.png"  $linkPageIco
+ConvertTo-Ico "$RepoDir\tools\transcribe\icons\wrench.png"       $wrenchIco
+ConvertTo-Ico "$RepoDir\tools\transcribe\icons\film.png"         $filmIco
+ConvertTo-Ico "$RepoDir\tools\removebg\icons\picture.png"        $pictureIco
+ConvertTo-Ico "$RepoDir\tools\ghopen\icons\world_go.png"         $worldIco
+ConvertTo-Ico "$RepoDir\tools\vid2md\icons\page_white_link.png"  $linkPageIco
 Write-Host "  [ico]  Icons written to $iconsOut" -ForegroundColor Green
 
 # --- transcribe + vid2md: video file extensions ---
@@ -235,7 +235,7 @@ foreach ($ext in $videoExts) {
     $root = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\MikesTools"
     Set-MikesToolsRoot $root $wrenchIco
     Add-MikesVerb $root "Transcribe" "Transcribe Video"   $filmIco    'cmd.exe /k ""C:\dev\tools\transcribe.bat" "%1""'
-    Add-MikesVerb $root "Vid2md"    "Video to Markdown"  $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`" `"%1`""
+    Add-MikesVerb $root "Vid2md"    "Video to Markdown"  $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\tools\vid2md\vid2md.ps1`" `"%1`""
 }
 
 # --- removebg: image file extensions ---
@@ -249,10 +249,10 @@ foreach ($ext in $imageExts) {
 # --- vid2md: Internet Shortcut files (.url) - YouTube links ---
 $urlRoot = "HKCU:\Software\Classes\SystemFileAssociations\.url\shell\MikesTools"
 Set-MikesToolsRoot $urlRoot $wrenchIco
-Add-MikesVerb $urlRoot "Vid2md" "Video to Markdown" $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`" `"%1`""
+Add-MikesVerb $urlRoot "Vid2md" "Video to Markdown" $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\tools\vid2md\vid2md.ps1`" `"%1`""
 
 # --- ghopen + vid2md: folders (right-click on folder icon) and folder background ---
-$vid2mdCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`" `"%1`""
+$vid2mdCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\tools\vid2md\vid2md.ps1`" `"%1`""
 
 # Directory - right-clicking a folder item; %1 = folder path
 $dirRoot = "HKCU:\Software\Classes\Directory\shell\MikesTools"
@@ -264,7 +264,7 @@ Add-MikesVerb $dirRoot "Vid2md" "Video to Markdown" $linkPageIco $vid2mdCmd
 $bgRoot = "HKCU:\Software\Classes\Directory\Background\shell\MikesTools"
 Set-MikesToolsRoot $bgRoot $wrenchIco
 Add-MikesVerb $bgRoot "GhOpen" "Open on GitHub"   $worldIco  'cmd.exe /k "cd /d "%V" && "C:\dev\tools\ghopen.bat""'
-Add-MikesVerb $bgRoot "Vid2md" "Video to Markdown" $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\vid2md\vid2md.ps1`""
+Add-MikesVerb $bgRoot "Vid2md" "Video to Markdown" $linkPageIco "powershell.exe -NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$RepoDir\tools\vid2md\vid2md.ps1`""
 
 # --- vid2md: all files and folders via AllFilesystemObjects ---
 # AllFilesystemObjects is a Windows shell class that matches every file and folder.

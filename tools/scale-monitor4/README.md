@@ -7,7 +7,7 @@ Toggles the DPI scaling of Monitor 4 (HG584T05) between 200% (normal use) and 30
 Click the taskbar shortcut, or run directly:
 
 ```powershell
-wscript.exe "C:\dev\me\mike-rosoft\scale-monitor4\scale-monitor4.vbs"
+wscript.exe "C:\dev\me\mikerosoft.app\tools\scale-monitor4\scale-monitor4.vbs"
 ```
 
 A small popup appears near the bottom-right of the screen showing the current scale. Click **200%** or **300%** to switch. The change applies immediately — no reboot or sign-out needed.

@@ -1,4 +1,4 @@
-# Agent guidance - mike-rosoft
+# Agent guidance - mikerosoft.app
 
 Instructions for AI agents (Cursor, etc.) working in this repo.
 
@@ -23,7 +23,7 @@ PATH) via thin stub `.bat` files or `.lnk` shortcuts.
   For `.ps1` scripts, run them directly with PowerShell. For `.vbs` launchers,
   run via `wscript.exe`. Check exit codes.
 - **No console windows for GUI/taskbar tools.** Use the `.vbs` launcher pattern
-  (see `scale-monitor4\scale-monitor4.vbs`) which calls `wscript.exe` with
+  (see `tools\scale-monitor4\scale-monitor4.vbs`) which calls `wscript.exe` with
   window style 0. Never launch PowerShell from a taskbar shortcut without a
   `.vbs` wrapper — it causes a CMD window to flash.
 - **ASCII encoding for `.bat` files.** Always write bat files with
@@ -40,7 +40,7 @@ Each tool can have an optional `<name>\deps.ps1` that installs or checks its
 dependencies. Rules:
 
 - **Idempotent** — check before installing; safe to run multiple times.
-- **Self-contained** — must work when run directly (`.\transcribe\deps.ps1`).
+- **Self-contained** — must work when run directly (`.\tools\transcribe\deps.ps1`).
 - **Clear output** — use `Write-Host` with colour so the user sees what happened.
 - For large manual-download binaries (e.g. `ffmpeg.exe`), just check and print
   a helpful message; don't try to auto-download.
@@ -69,12 +69,12 @@ them in alphabetical order. Pass `-SkipDeps` to skip this step.
 
 1. `mkdir <name>` in the repo root
 2. Write `<name>\<name>.ps1` with WinForms or notification logic
-3. Copy `scale-monitor4\scale-monitor4.vbs` as `<name>\<name>.vbs` and update
+3. Copy `tools\scale-monitor4\scale-monitor4.vbs` as `tools\<name>\<name>.vbs` and update
  the filename reference inside it
 4. If the tool has external dependencies, write `<name>\deps.ps1`
 5. Add a shortcut block in `install.ps1` (see the `scale-monitor4` section)
 6. Run `install.ps1`
-7. Test via `wscript.exe "C:\dev\me\mike-rosoft\<name>\<name>.vbs"`
+7. Test via `wscript.exe "C:\dev\me\mikerosoft.app\tools\<name>\<name>.vbs"`
 8. Right-click the generated `.lnk` in `C:\dev\tools` → Pin to taskbar
 9. Commit
 
@@ -82,7 +82,7 @@ them in alphabetical order. Pass `-SkipDeps` to skip this step.
 
 ## Editing an existing tool
 
-1. Edit the file in this repo directly (e.g. `scale-monitor4\scale-monitor4.ps1`)
+1. Edit the file in this repo directly (e.g. `tools\scale-monitor4\scale-monitor4.ps1`)
 2. Test it: run via `wscript.exe` (GUI) or directly with PowerShell (CLI)
 3. Commit — no reinstall needed
 
@@ -91,46 +91,47 @@ them in alphabetical order. Pass `-SkipDeps` to skip this step.
 ## File structure
 
 ```
-mike-rosoft\
+mikerosoft.app\
 ├── AGENTS.md                  ← you are here
 ├── README.md
 ├── install.ps1                ← generates stubs + runs deps.ps1; re-run when adding tools
 ├── .gitignore
-├── all-hands\
-│   ├── all-hands.bat
-│   └── deps.ps1               ← checks Docker is installed
-├── ghopen\
-│   ├── ghopen.bat             ← opens GitHub repo or PR page in browser
-│   └── deps.ps1               ← checks gh CLI (optional but recommended)
-├── backup-phone\
-│   ├── backup-phone.bat
-│   ├── backup-phone.ps1
-│   └── deps.ps1               ← pip install pillow pillow-heif
-├── removebg\
-│   ├── removebg.bat
-│   └── deps.ps1               ← pip install rembg[gpu]
-├── scale-monitor4\
-│   ├── scale-monitor4.ps1     ← WinForms popup UI + registry toggle
-│   ├── scale-monitor4.vbs     ← silent launcher (no window flash)
-│   └── scale-monitor4.bat     ← thin bat wrapper (not used directly)
-├── taskmon\
-│   ├── taskmon.csproj         ← MSBuild project (no SDK needed)
-│   ├── Native.cs              ← Win32 P/Invoke + NVML declarations
-│   ├── Settings.cs            ← JSON-backed settings
-│   ├── Metrics.cs             ← CircularBuffer + PerformanceCounter/NVML sampling
-│   ├── OverlayForm.cs         ← layered window, rendering, hit-test, menu
-│   ├── SettingsForm.cs        ← tabbed settings dialog
-│   ├── App.cs                 ← DarkRenderer + App entry point
-│   ├── icons\                 ← famfamfam silk icons (CC BY 2.5) embedded as manifest resources
-│   ├── taskmon.ps1            ← PS launcher: loads pre-built DLL, calls App::Run()
-│   ├── taskmon.vbs            ← silent launcher (no console window)
-│   ├── build.bat              ← builds via MSBuild.exe → %LOCALAPPDATA%\taskmon\taskmon.dll
-│   ├── build-and-run.bat      ← kill + build + launch in one step (daily dev command)
-│   ├── kill.bat               ← kills running taskmon by command-line pattern
-│   └── deps.ps1               ← checks nvml.dll present (NVIDIA GPU monitoring)
-└── transcribe\
-    ├── transcribe.bat         ← uses %EXEDIR% for ffmpeg / whisper paths
-    └── deps.ps1               ← checks ffmpeg.exe + faster-whisper-xxl.exe exist
+└── tools\
+    ├── all-hands\
+    │   ├── all-hands.bat
+    │   └── deps.ps1               ← checks Docker is installed
+    ├── ghopen\
+    │   ├── ghopen.bat             ← opens GitHub repo or PR page in browser
+    │   └── deps.ps1               ← checks gh CLI (optional but recommended)
+    ├── backup-phone\
+    │   ├── backup-phone.bat
+    │   ├── backup-phone.ps1
+    │   └── deps.ps1               ← pip install pillow pillow-heif
+    ├── removebg\
+    │   ├── removebg.bat
+    │   └── deps.ps1               ← pip install rembg[gpu]
+    ├── scale-monitor4\
+    │   ├── scale-monitor4.ps1     ← WinForms popup UI + registry toggle
+    │   ├── scale-monitor4.vbs     ← silent launcher (no window flash)
+    │   └── scale-monitor4.bat     ← thin bat wrapper (not used directly)
+    ├── taskmon\
+    │   ├── taskmon.csproj         ← MSBuild project (no SDK needed)
+    │   ├── Native.cs              ← Win32 P/Invoke + NVML declarations
+    │   ├── Settings.cs            ← JSON-backed settings
+    │   ├── Metrics.cs             ← CircularBuffer + PerformanceCounter/NVML sampling
+    │   ├── OverlayForm.cs         ← layered window, rendering, hit-test, menu
+    │   ├── SettingsForm.cs        ← tabbed settings dialog
+    │   ├── App.cs                 ← DarkRenderer + App entry point
+    │   ├── icons\                 ← famfamfam silk icons (CC BY 2.5) embedded as manifest resources
+    │   ├── taskmon.ps1            ← PS launcher: loads pre-built DLL, calls App::Run()
+    │   ├── taskmon.vbs            ← silent launcher (no console window)
+    │   ├── build.bat              ← builds via MSBuild.exe → %LOCALAPPDATA%\taskmon\taskmon.dll
+    │   ├── build-and-run.bat      ← kill + build + launch in one step (daily dev command)
+    │   ├── kill.bat               ← kills running taskmon by command-line pattern
+    │   └── deps.ps1               ← checks nvml.dll present (NVIDIA GPU monitoring)
+    └── transcribe\
+        ├── transcribe.bat         ← uses %EXEDIR% for ffmpeg / whisper paths
+        └── deps.ps1               ← checks ffmpeg.exe + faster-whisper-xxl.exe exist
 ```
 
 ---
@@ -139,7 +140,7 @@ mike-rosoft\
 
 | Path | What it is |
 |---|---|
-| `C:\dev\me\mike-rosoft\` | This repo |
+| `C:\dev\me\mikerosoft.app\` | This repo |
 | `C:\dev\tools\` | On PATH; holds stubs + large exe binaries |
 | `C:\dev\tools\ffmpeg.exe` | Used by transcribe |
 | `C:\dev\tools\faster-whisper-xxl.exe` | Used by transcribe |
@@ -204,17 +205,17 @@ After code changes to any `.cs` file, just re-run `build-and-run.bat`.
 ### Important paths for taskmon
 | Path | What it is |
 |---|---|
-| `taskmon\taskmon.csproj` | MSBuild project file |
-| `taskmon\Native.cs` | Win32 P/Invoke + NVML declarations |
-| `taskmon\Settings.cs` | JSON-backed settings |
-| `taskmon\Metrics.cs` | CircularBuffer + PerformanceCounter/NVML sampling |
-| `taskmon\OverlayForm.cs` | Layered window rendering + hit-test + menu |
-| `taskmon\SettingsForm.cs` | Tabbed settings dialog |
-| `taskmon\App.cs` | DarkRenderer + App entry point |
-| `taskmon\icons\` | famfamfam silk icons — CC BY 2.5, https://www.famfamfam.com/lab/icons/silk/ |
-| `taskmon\build.bat` | Builds via MSBuild.exe, kills old instance first |
-| `taskmon\build-and-run.bat` | Full dev cycle: kill + build + launch |
-| `taskmon\kill.bat` | Kills taskmon by matching `*taskmon.ps1*` in WMI |
+| `tools\taskmon\taskmon.csproj` | MSBuild project file |
+| `tools\taskmon\Native.cs` | Win32 P/Invoke + NVML declarations |
+| `tools\taskmon\Settings.cs` | JSON-backed settings |
+| `tools\taskmon\Metrics.cs` | CircularBuffer + PerformanceCounter/NVML sampling |
+| `tools\taskmon\OverlayForm.cs` | Layered window rendering + hit-test + menu |
+| `tools\taskmon\SettingsForm.cs` | Tabbed settings dialog |
+| `tools\taskmon\App.cs` | DarkRenderer + App entry point |
+| `tools\taskmon\icons\` | famfamfam silk icons — CC BY 2.5, https://www.famfamfam.com/lab/icons/silk/ |
+| `tools\taskmon\build.bat` | Builds via MSBuild.exe, kills old instance first |
+| `tools\taskmon\build-and-run.bat` | Full dev cycle: kill + build + launch |
+| `tools\taskmon\kill.bat` | Kills taskmon by matching `*taskmon.ps1*` in WMI |
 | `%LOCALAPPDATA%\taskmon\taskmon.dll` | Compiled output (not in git) |
 | `%LOCALAPPDATA%\taskmon\settings.json` | User settings (not in git) |
 | `C:\Windows\System32\nvml.dll` | NVIDIA GPU monitoring (ships with drivers) |
@@ -227,10 +228,10 @@ Push-to-talk voice transcription tool. Hold Right Ctrl to record, release to tra
 
 ### Dev workflow
 
-After any code change to `voice-type\voice-type.py`, restart with:
+After any code change to `tools\voice-type\voice-type.py`, restart with:
 
 ```
-cd voice-type
+cd tools\voice-type
 restart.bat
 ```
 
@@ -270,10 +271,10 @@ cmd /c "tasklist /FO CSV" | ConvertFrom-Csv | Where-Object { $_."Image Name" -li
 
 ```powershell
 # Run a ps1 directly for testing
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scale-monitor4\scale-monitor4.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\scale-monitor4\scale-monitor4.ps1
 
 # Run a tool via its vbs launcher (same as taskbar click)
-wscript.exe ".\scale-monitor4\scale-monitor4.vbs"
+wscript.exe ".\tools\scale-monitor4\scale-monitor4.vbs"
 
 # Re-run install after adding a tool
 powershell -ExecutionPolicy Bypass -File .\install.ps1
